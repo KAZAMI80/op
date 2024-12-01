@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحه موبایل</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Tahoma, Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .content {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #555;
+        }
+
+        img {
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .balance {
+            font-size: 1.5rem;
+            color: #000;
+            margin-top: 20px;
+        }
+
+        .ad-button, .submit-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .ad-button:disabled, .submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .question-box {
+            margin-top: 20px;
+            display: block;
+        }
+
+        .question-box input {
+            padding: 10px;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: green;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>خوش آمدید به صفحه موبایل</h1>
+        <p>این صفحه فقط برای موبایل بهینه شده است.</p>
+        
+        <!-- تغییر تصویر و عملکرد آن -->
+        <img id="photo" src="images/photo.jpg" alt="توضیح عکس">
+        
+        <!-- نمایش بالانس -->
+        <div class="balance">بالانس: <span id="balance">0</span></div>
+
+        <!-- دکمه تبلیغات -->
+        <button id="adButton" class="ad-button">دیدن تبلیغات</button>
+
+        <!-- کادر سوال ثابت -->
+        <div id="questionBox" class="question-box">
+            <p>پاسخ سوال را وارد کنید:</p>
+            <input type="text" id="answerInput" placeholder="پاسخ را وارد کنید">
+            <button id="submitAnswer" class="submit-button">ارسال پاسخ</button>
+        </div>
+
+        <!-- پیام بعد از دریافت پاداش -->
+        <div id="message" class="message"></div>
+
+        <!-- پیام خطای پاسخ اشتباه -->
+        <div id="errorMessage" class="error-message" style="display: none;">پاسخ اشتباه است</div>
+    </div>
+
+    <script>
+        let balance = localStorage.getItem('balance') ? parseInt(localStorage.getItem('balance')) : 0;  // بارگذاری مقدار بالانس از localStorage
+        let questionAnswered = localStorage.getItem('questionAnswered') === 'true';  // بارگذاری وضعیت پاسخ سوال
+        let photoChanged = localStorage.getItem('photoChanged') === 'true';  // بارگذاری وضعیت تغییر عکس
+        let lastStartTime = localStorage.getItem('lastStartTime') ? parseInt(localStorage.getItem('lastStartTime')) : 0;  // بارگذاری زمان آخرین استارت
+        const balanceDisplay = document.getElementById('balance');
+        const photoImage = document.getElementById('photo');
+        const adButton = document.getElementById('adButton');
+        const questionBox = document.getElementById('questionBox');
+        const answerInput = document.getElementById('answerInput');
+        const submitButton = document.getElementById('submitAnswer');
+        const messageDisplay = document.getElementById('message');
+        const errorMessageDisplay = document.getElementById('errorMessage');
+        let intervalId;
+
+        balanceDisplay.textContent = balance;
+
+        // ذخیره‌سازی داده‌ها در localStorage
+        function saveData() {
+            localStorage.setItem('balance', balance);  // ذخیره مقدار بالانس
+            localStorage.setItem('lastStartTime', lastStartTime);  // ذخیره زمان آخرین استارت
+            localStorage.setItem('photoChanged', photoChanged);  // ذخیره وضعیت تغییر عکس
+            localStorage.setItem('questionAnswered', questionAnswered);  // ذخیره وضعیت پاسخ سوال
+        }
+
+        // تغییر تصویر و افزودن به بالانس
+        function startBalanceIncrease() {
+            photoImage.src = 'images/photo2.jpg';  // تغییر به عکس دوم
+
+            // اضافه کردن هر 2 ثانیه یکبار به بالانس
+            intervalId = setInterval(() => {
+                balance++;
+                balanceDisplay.textContent = balance;
+                saveData();  // ذخیره‌سازی تغییرات در هر بار افزایش بالانس
+            }, 2000);
+        }
+
+        // بازگرداندن تصویر به عکس اول بعد از 4 ساعت
+        function stopBalanceIncrease() {
+            clearInterval(intervalId);
+            photoImage.src = 'images/photo.jpg';  // بازگشت به عکس اصلی
+            photoChanged = false;
+            saveData();  // ذخیره‌سازی تغییرات
+        }
+
+        // بررسی وضعیت و ادامه فرایند افزایش بالانس
+        function checkBalanceProcess() {
+            const now = Date.now();
+            if (photoChanged) {
+                // اگر تصویر تغییر کرده، افزایش بالانس ادامه پیدا می‌کند
+                if (now - lastStartTime < 4 * 60 * 60 * 1000) {
+                    startBalanceIncrease();  // شروع به اضافه کردن بالانس
+                } else {
+                    stopBalanceIncrease();  // بعد از 4 ساعت متوقف می‌شود
+                }
+            }
+        }
+
+        // بارگذاری وضعیت و ادامه فرایند اگر نیاز باشد
+        window.onload = function() {
+            balanceDisplay.textContent = balance;
+            if (photoChanged) {
+                checkBalanceProcess();
+            }
+        };
+
+        // کلیک روی عکس
+        photoImage.addEventListener('click', () => {
+            if (photoChanged || questionAnswered) {
+                return; // اگر عکس قبلاً تغییر کرده یا سوال پاسخ داده شده، هیچ کاری نکن
+            }
+
+            photoChanged = true;
+            lastStartTime = Date.now();
+            saveData();  // ذخیره‌سازی وضعیت عکس و زمان
+            startBalanceIncrease();  // شروع به اضافه کردن بالانس
+
+            // بعد از 4 ساعت عکس را به حالت اول برگردانیم
+            setTimeout(stopBalanceIncrease, 4 * 60 * 60 * 1000); // بعد از 4 ساعت
+        });
+
+        // دکمه تبلیغات (هدایت به لینک یوتیوب)
+        adButton.addEventListener('click', () => {
+            window.open('https://www.youtube.com/watch?v=_S8RBVecDxI', '_blank');
+        });
+
+        // چک کردن پاسخ
+        function checkAnswer() {
+            const userAnswer = answerInput.value;
+            if (userAnswer === '666666' && !questionAnswered) {
+                balance += 500;  // اضافه کردن 500 به بالانس
+                balanceDisplay.textContent = balance;
+                messageDisplay.textContent = 'خدا نگهدار تا سوال بعد';
+                questionBox.style.display = 'none';
+                questionAnswered = true;  // فقط یکبار پاداش داده می‌شود
+                saveData();  // ذخیره‌سازی تغییرات
+            } else if (userAnswer !== '666666') {
+                // نمایش پیام خطا برای 2 ثانیه
+                errorMessageDisplay.style.display = 'block';
+                setTimeout(() => {
+                    errorMessageDisplay.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // دکمه ارسال پاسخ
+        submitButton.addEventListener('click', checkAnswer);
+
+        // برای شروع پرسش سوال
+        setTimeout(() => {
+            questionBox.style.display = 'block';
+        }, 5000); // 5 ثانیه پس از بارگذاری صفحه، سوال نمایش داده می‌شود
+    </script>
+</body>
+</html>
